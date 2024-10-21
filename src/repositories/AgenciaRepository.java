@@ -27,10 +27,10 @@ public class AgenciaRepository implements Repositorio<Agencia, Integer> {
     @Override
     public void editar(Agencia agencia, Integer codAgencia) {
         try {
-            Agencia antiga = buscar(codAgencia);
-            if (antiga != null) {
-                antiga.setNome(agencia.getNome());
-                antiga.setEndereco(agencia.getEndereco());
+            Optional<Agencia> antiga = buscar(codAgencia);
+            if (antiga.isPresent()) {
+                antiga.get().setNome(agencia.getNome());
+                antiga.get().setEndereco(agencia.getEndereco());
                 LocadoraUtils.salvarDadosLocadora();
             }
         } catch (IOException e) {

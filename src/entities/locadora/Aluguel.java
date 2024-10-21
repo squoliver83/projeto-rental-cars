@@ -187,8 +187,8 @@ public class Aluguel {
 
         Cliente cliente = UsuarioService.buscarCliente(emailCliente);
         Veiculo veiculo = VeiculoService.buscarVeiculo(placaVeiculo).get();
-        Agencia agenciaRetirada = AgenciaService.buscarAgencia(codigoLocalRetirada);
-        Agencia agenciaDevolucao = AgenciaService.buscarAgencia(codigoLocalDevolucao);
+        Agencia agenciaRetirada = AgenciaService.buscarAgencia(codigoLocalRetirada).get();
+        Agencia agenciaDevolucao = AgenciaService.buscarAgencia(codigoLocalDevolucao).get();
 
         return new Aluguel(id, cliente, veiculo, dataRetirada, dataDevolucao, agenciaRetirada, agenciaDevolucao, valorAluguel);
     }

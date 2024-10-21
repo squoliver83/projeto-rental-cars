@@ -54,7 +54,7 @@ public class AluguelService {
             return;
         }
 
-        Agencia localRetirada = AgenciaService.buscarAgencia(escolhido.get().getCodAgenciaAtual());
+        Optional<Agencia> localRetirada = AgenciaService.buscarAgencia(escolhido.get().getCodAgenciaAtual());
 
         Integer codAgenciaDevolucao = null;
         while (codAgenciaDevolucao == null) {
@@ -69,8 +69,8 @@ public class AluguelService {
 
         input.nextLine();
 
-        Agencia localDevolucao = AgenciaService.buscarAgencia(codAgenciaDevolucao);
-        if (localDevolucao == null) {
+        Optional<Agencia> localDevolucao = AgenciaService.buscarAgencia(codAgenciaDevolucao);
+        if (localDevolucao.isEmpty()) {
             System.out.println("A agência de devolução não foi encontrada, tente novamente!");
             return;
         }
@@ -94,7 +94,7 @@ public class AluguelService {
         Integer novoIdAluguel = obterUltimoIdAluguel() + 1;
 
         Aluguel novoAluguel = new Aluguel(novoIdAluguel, cliente, escolhido.get(), LocalDateTime.now(),
-                dataDevolucao, localRetirada, localDevolucao, BigDecimal.ZERO);
+                dataDevolucao, localRetirada.get(), localDevolucao.get(), BigDecimal.ZERO);
         novoAluguel.setValorAluguel(novoAluguel.calcularValorTotal());
 
         escolhido.get().setDisponivel(false);
