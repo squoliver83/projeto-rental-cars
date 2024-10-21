@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class AgenciaRepository implements Repositorio<Agencia, Integer> {
 
@@ -53,13 +54,11 @@ public class AgenciaRepository implements Repositorio<Agencia, Integer> {
     }
 
     @Override
-    public Agencia buscar(Integer id) {
-        for (Agencia agencia : Locadora.getAgencias()) {
-            if (Objects.equals(agencia.getCodigo(), id)) {
-                return agencia;
-            }
-        }
-        return null;
+    public Optional<Agencia> buscar(Integer id) {
+
+        return Locadora.getAgencias().stream()
+                .filter(a -> a.getCodigo().equals(id))
+                .findFirst();
     }
 
     @Override

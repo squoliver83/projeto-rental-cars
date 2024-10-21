@@ -5,7 +5,14 @@ import utils.ConsoleColors;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import static services.UsuarioService.*;
+import static services.UsuarioService.adicionar;
+import static services.UsuarioService.buscar;
+import static services.UsuarioService.editar;
+import static services.UsuarioService.listar;
+import static services.UsuarioService.remover;
+import static services.UsuarioService.buscarPorParteDoNome;
+
+
 import static utils.menus.MenuAdm.mostrarOpcoesCrud;
 
 public abstract class MenuCrudClientes {
