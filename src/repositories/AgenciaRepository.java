@@ -5,73 +5,87 @@ import entities.locadora.Locadora;
 import utils.persistencia.LocadoraUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class AgenciaRepository implements Repositorio<Agencia, Integer> {
 
     @Override
     public void adicionar(Agencia agencia) {
         Locadora.getAgencias().add(agencia);
-        salvarDados();
+        try {
+            LocadoraUtils.salvarDadosLocadora();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
+
 
     @Override
     public void editar(Agencia agencia, Integer codAgencia) {
-        buscar(codAgencia).ifPresentOrElse(antiga -> {
-            antiga.setNome(agencia.getNome());
-            antiga.setEndereco(agencia.getEndereco());
-            salvarDados();
-        }, () -> {
-            throw new NoSuchElementException("Agência com código " + codAgencia + " não encontrada.");
-        });
+        try {
+            Agencia antiga = buscar(codAgencia);
+            if (antiga != null) {
+                antiga.setNome(agencia.getNome());
+                antiga.setEndereco(agencia.getEndereco());
+                LocadoraUtils.salvarDadosLocadora();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao salvar os dados da locadora.", e);
+        }
     }
 
     @Override
     public Agencia remover(Agencia agencia) {
-        Optional<Agencia> encontrada = buscar(agencia.getCodigo());
-        if (encontrada.isPresent()) {
-            Locadora.getAgencias().remove(encontrada.get());
-            salvarDados();
-            return encontrada.get();
+        try {
+            int index = Locadora.getAgencias().indexOf(buscar(agencia.getCodigo()));
+            if (index != -1) {
+                Agencia removido = Locadora.getAgencias().remove(index);
+                LocadoraUtils.salvarDadosLocadora();
+                return removido;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         return null;
     }
 
     @Override
-    public Optional<Agencia> buscar(Integer id) {
-        return Locadora.getAgencias().stream()
-                .filter(agencia -> Objects.equals(agencia.getCodigo(), id))
-                .findFirst();
+    public Agencia buscar(Integer id) {
+        for (Agencia agencia : Locadora.getAgencias()) {
+            if (Objects.equals(agencia.getCodigo(), id)) {
+                return agencia;
+            }
+        }
+        return null;
     }
 
     @Override
     public List<Agencia> listar() {
-        return Locadora.getAgencias().stream()
-                .sorted()
-                .collect(Collectors.toList());
+        List<Agencia> agencias = Locadora.getAgencias();
+        Collections.sort(agencias);
+        return agencias;
     }
 
     public static List<Agencia> buscarPorParteDoNome(String nome) {
-        String nomeLower = nome.toLowerCase();
-        return Locadora.getAgencias().stream()
-                .filter(agencia -> agencia.getNome().toLowerCase().contains(nomeLower) ||
-                        agencia.getEndereco().getLogradouro().toLowerCase().contains(nomeLower))
-                .collect(Collectors.toList());
+        List<Agencia> agencias = Locadora.getAgencias();
+        List<Agencia> resultado = new ArrayList<>();
+        for (Agencia agencia : agencias) {
+            if (agencia.getNome().toLowerCase().contains(nome.toLowerCase()) || agencia.getEndereco().getLogradouro().toLowerCase().contains(nome.toLowerCase())) {
+                resultado.add(agencia);
+            }
+        }
+        return resultado;
     }
 
     public boolean existeAgenciaComMesmosDados(Agencia agencia) {
-        return Locadora.getAgencias().stream().anyMatch(ag -> ag.equals(agencia));
-    }
-
-    private void salvarDados() {
-        try {
-            LocadoraUtils.salvarDadosLocadora();
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao salvar os dados da locadora.", e);
+        for (Agencia ag : Locadora.getAgencias()) {
+            if (ag.equals(agencia)) {
+                return true;
+            }
         }
+        return false;
     }
 }

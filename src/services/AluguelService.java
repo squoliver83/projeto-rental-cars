@@ -6,7 +6,7 @@ import entities.locadora.Locadora;
 import entities.usuario.Cliente;
 import entities.usuario.Usuario;
 import entities.veiculo.Veiculo;
-import repositories.AluguelRepositoryImpl;
+import repositories.AluguelRepositoryImplementacao;
 import utils.ConsoleColors;
 import utils.NumberFormatter;
 
@@ -14,7 +14,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.Scanner;
 
 import static services.VeiculoService.buscarVeiculo;
@@ -22,7 +21,7 @@ import static services.VeiculoService.buscarVeiculosDisponiveis;
 
 public class AluguelService {
 
-    private static final AluguelRepositoryImpl aluguelRepository = new AluguelRepositoryImpl();
+    private static final AluguelRepositoryImplementacao aluguelRepository = new AluguelRepositoryImplementacao();
 
     public static void alugarVeiculo(Scanner input, Usuario usuario) {
         Cliente cliente = (Cliente) usuario;
@@ -43,18 +42,18 @@ public class AluguelService {
         }
         input.nextLine();
 
-        Optional<Veiculo> escolhido = buscarVeiculo(idVeiculo);
-        if (escolhido.isEmpty()) {
+        Veiculo escolhido = buscarVeiculo(idVeiculo);
+        if (escolhido == null) {
             System.out.println("O veículo não foi encontrado, tente novamente!");
             return;
         }
 
-        if (!escolhido.get().isDisponivel()) {
+        if (!escolhido.isDisponivel()) {
             System.out.println("O veículo já está alugado. Tente novamente com outro veículo!");
             return;
         }
 
-        Agencia localRetirada = AgenciaService.buscarAgencia(escolhido.get().getCodAgenciaAtual()).get();
+        Agencia localRetirada = AgenciaService.buscarAgencia(escolhido.getCodAgenciaAtual());
 
         Integer codAgenciaDevolucao = null;
         while (codAgenciaDevolucao == null) {
@@ -69,8 +68,8 @@ public class AluguelService {
 
         input.nextLine();
 
-        Optional<Agencia> localDevolucao = AgenciaService.buscarAgencia(codAgenciaDevolucao);
-        if (localDevolucao.isEmpty()) {
+        Agencia localDevolucao = AgenciaService.buscarAgencia(codAgenciaDevolucao);
+        if (localDevolucao == null) {
             System.out.println("A agência de devolução não foi encontrada, tente novamente!");
             return;
         }
@@ -93,11 +92,11 @@ public class AluguelService {
 
         Integer novoIdAluguel = obterUltimoIdAluguel() + 1;
 
-        Aluguel novoAluguel = new Aluguel(novoIdAluguel, cliente, escolhido.get(), LocalDateTime.now(),
-                dataDevolucao, localRetirada, localDevolucao.get(), BigDecimal.ZERO);
+        Aluguel novoAluguel = new Aluguel(novoIdAluguel, cliente, escolhido, LocalDateTime.now(),
+                dataDevolucao, localRetirada, localDevolucao, BigDecimal.ZERO);
         novoAluguel.setValorAluguel(novoAluguel.calcularValorTotal());
 
-        escolhido.get().setDisponivel(false);
+        escolhido.setDisponivel(false);
 
         aluguelRepository.salvarAluguel(novoAluguel);
         System.out.println(gerarComprovanteDeAluguel(novoAluguel));
@@ -109,20 +108,20 @@ public class AluguelService {
 
         System.out.println("Digite a placa do veículo que está sendo devolvido: ");
         String placa = input.nextLine();
-        Optional<Veiculo> devolvido = buscarVeiculo(placa);
+        Veiculo devolvido = buscarVeiculo(placa);
 
 
-        if (devolvido.isPresent() && devolvido.get().isDisponivel()) {
-            System.out.println("Não é possível devolver um veículo que ainda não foi alugado!");
+        if (devolvido.isDisponivel()) {
+            System.out.println("Não é possível devolver um veículo que não foi alugado!");
             return;
         }
-        if (devolvido.isEmpty()) {
+        if (devolvido == null) {
             System.out.println("Veículo não encontrado.");
         } else {
             List<Aluguel> alugueis = aluguelRepository.buscarPorCliente(cliente);
             for (Aluguel aluguel : alugueis) {
                 if (aluguel.getCliente().equals(cliente)) {
-                    devolvido.get().setDisponivel(true);
+                    devolvido.setDisponivel(true);
                     System.out.println(gerarExtratoDetalhado(aluguel));
                     break;
                 }

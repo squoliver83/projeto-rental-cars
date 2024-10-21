@@ -6,7 +6,6 @@ import repositories.UsuarioRepository;
 import utils.ConsoleColors;
 
 import java.util.InputMismatchException;
-import java.util.Optional;
 import java.util.Scanner;
 
 import static services.AluguelService.*;
@@ -22,8 +21,8 @@ public abstract class MenuCliente {
             System.out.print("Digite seu email de cliente: ");
             String email = input.nextLine();
 
-            Optional<Usuario> usuario = usuarioRepository.buscar(email);
-            if (!(usuario.isPresent() && usuario.get() instanceof Cliente)) {
+            Usuario usuario = usuarioRepository.buscar(email);
+            if (!(usuario instanceof Cliente)) {
                 System.out.println("Cliente não encontrado.");
                 return;
             }
@@ -41,10 +40,10 @@ public abstract class MenuCliente {
             }
 
             switch (opcao) {
-                case 1 -> alugarVeiculo(input, usuario.get());
-                case 2 -> devolverVeiculo(input, usuario.get());
+                case 1 -> alugarVeiculo(input, usuario);
+                case 2 -> devolverVeiculo(input, usuario);
                 case 3 -> {
-                    mostrarComprovanteDevolucoes(input, (Cliente) usuario.get());
+                    mostrarComprovanteDevolucoes(input, (Cliente) usuario);
                     ativo = false;
                 }
                 case 4 -> ativo = false;
