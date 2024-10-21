@@ -11,71 +11,83 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class UsuarioRepository implements Repositorio<Usuario, String> {
     @Override
     public void adicionar(Usuario usuario) {
         Locadora.getUsuarios().add(usuario);
-        salvarDados();
+        try {
+            LocadoraUtils.salvarDadosLocadora();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void editar(Usuario usuario, String email) {
-        buscar(email).ifPresentOrElse(antigo -> {
-            antigo.setNome(usuario.getNome());
-            antigo.setEmail(usuario.getEmail());
-
-            if (antigo instanceof Administrador adminUser) {
-                adminUser.setNumeroRegistro(((Administrador) usuario).getNumeroRegistro());
-            } else if (antigo instanceof PessoaFisica pessoaFisica) {
-                pessoaFisica.setCpf(((PessoaFisica) usuario).getCpf());
-            } else if (antigo instanceof PessoaJuridica pessoaJuridica) {
-                pessoaJuridica.setCnpj(((PessoaJuridica) usuario).getCnpj());
+        try {
+            Usuario antigo = buscar(email);
+            int index = Locadora.getUsuarios().indexOf(antigo);
+            if(index != -1) {
+                Usuario editado = Locadora.getUsuarios().get(index);
+                editado.setNome(usuario.getNome());
+                editado.setEmail(usuario.getEmail());
+                if (editado instanceof Administrador adminUser) {
+                    adminUser.setNumeroRegistro(((Administrador) usuario).getNumeroRegistro());
+                } else if (editado instanceof PessoaFisica pessoaFisica) {
+                    pessoaFisica.setCpf(((PessoaFisica) usuario).getCpf());
+                } else if (editado instanceof PessoaJuridica pessoaJuridica) {
+                    pessoaJuridica.setCnpj(((PessoaJuridica) usuario).getCnpj());
+                }
+                LocadoraUtils.salvarDadosLocadora();
             }
-            salvarDados();
-        }, () -> {
-            throw new NoSuchElementException("Usuário com email " + email + " não encontrado.");
-        });
-    }
-
-    @Override
-    public Optional<Usuario> buscar(String email) {
-        return Locadora.getUsuarios().stream()
-                .filter(u -> u.getEmail().equals(email))
-                .findFirst();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Usuario remover(Usuario usuario) {
-        if (Locadora.getUsuarios().remove(usuario)) {
-            salvarDados();
-            return usuario;
+        try {
+            int index = Locadora.getUsuarios().indexOf(usuario);
+            if(index != -1) {
+                Usuario removido = Locadora.getUsuarios().remove(index);
+                LocadoraUtils.salvarDadosLocadora();
+                return removido;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao salvar os dados da locadora.", e);
+        }
+        return null;
+    }
+
+    @Override
+    public Usuario buscar(String email) {
+        for(Usuario u : Locadora.getUsuarios()){
+            if(u.getEmail().equals(email)){
+                return u;
+            }
         }
         return null;
     }
 
     public static List<Usuario> buscarPorParteDoNome(String parteDoNome) {
-        String nomeLower = parteDoNome.toLowerCase();
-        return Locadora.getUsuarios().stream()
-                .filter(usuario -> usuario.getNome().toLowerCase().contains(nomeLower))
-                .collect(Collectors.toList());
+        List<Usuario> usuariosEncontrados = new ArrayList<>();
+        for (Usuario usuario : Locadora.getUsuarios()) {
+            if (usuario.getNome().toLowerCase().contains(parteDoNome.toLowerCase())) {
+                usuariosEncontrados.add(usuario);
+            }
+        }
+        return usuariosEncontrados;
     }
+
+
+
 
     @Override
     public List<Usuario> listar() {
-        return Locadora.getUsuarios().stream()
-                .sorted()
-                .collect(Collectors.toList());
-    }
-
-    private void salvarDados() {
-        try {
-            LocadoraUtils.salvarDadosLocadora();
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao salvar dados da locadora.", e);
-        }
+        List<Usuario> usuarios = Locadora.getUsuarios();
+        Collections.sort(usuarios);
+        return usuarios;
     }
 }
