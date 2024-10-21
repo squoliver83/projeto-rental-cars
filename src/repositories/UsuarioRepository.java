@@ -35,7 +35,7 @@ public class UsuarioRepository implements Repositorio<Usuario, String> {
             }
             salvarDados();
         }, () -> {
-            throw new NoSuchElementException("Usuário com email " + email + " não encontrado.");
+            throw new NoSuchElementException("Usuário com email " + email + " não encontrado");
         });
     }
 

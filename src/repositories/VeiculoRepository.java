@@ -26,7 +26,7 @@ public class VeiculoRepository implements Repositorio<Veiculo, String> {
             antigo.setCor(veiculo.getCor());
             salvarDados();
         }, () -> {
-            throw new NoSuchElementException("Veículo com placa " + placaAntiga + " não encontrado.");
+            throw new NoSuchElementException("Veículo com placa " + placaAntiga + " não encontrado");
         });
     }
 
